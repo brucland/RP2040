@@ -11,3 +11,5 @@ https://people.ece.cornell.edu/land/courses/ece5760/index.html.
 For the last five years I also taught a technical writing course.
 https://people.ece.cornell.edu/land/courses/ece4920/index.html
 Now Hunter and I are looking for the next architecture to use for the microcontroller course.
+
+We have been experimenting with the C-SDK, MBED/Arduino, and MIcroPython.
