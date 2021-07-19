@@ -1,7 +1,7 @@
 # RP2040
 Building an understanding of the Pi RP2040 by iterative programming and head-scratching.
 ---
-I am a retired lectured from Electrical and Computer Engineering where I taught hardware design courses
+I am a retired lecturer from Electrical and Computer Engineering at Cornell University where I taught hardware design courses
 for over 20 years. I have taught using Atmel AVR, Microchip PIC32, and Altera/Intel Cyclone 2, 4 and 5 FPGAs.
 The courses are now being taught by Van Hunter Adams. 
 Last years web pages are at 
