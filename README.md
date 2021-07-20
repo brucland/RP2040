@@ -12,4 +12,7 @@ For the last five years I also taught a technical writing course.
 https://people.ece.cornell.edu/land/courses/ece4920/index.html
 Now Hunter and I are looking for the next architecture to use for the microcontroller course.
 
-We have been experimenting with the C-SDK, MBED/Arduino, and MIcroPython.
+We have been experimenting with the C-SDK, MBED/Arduino, and MIcroPython. After messing with 
+MicroPython for a few weeks, I switched to the MBED/Arduino environment which allows free intermixing
+of MBED and C-SDK constructs. The resulting programs have NO Arduino syntax (except for the ino extension)
+but use the high-level MBED RTOS, mixed with C-SDK, on core0, and only the C-SDK on core1.
