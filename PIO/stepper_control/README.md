@@ -21,4 +21,6 @@ The output of the assembler is a C header file with an array representing the as
 a couple of assembler-written C routines, and with the C code you specifed passed through to the header file.
 
 There are therefore three files: (1) the C++ source file (.ino), (2) the PIO assembler source (.pio) 
-(3) the output of the PIO assembler (.h) which is included into the C++ source.
+(3) the output of the PIO assembler (.h) which is included into the C++ source. The C program uses MBED and
+C-SDK to implemnet funcitons. MBED threads are used for multitasking and USB serial support. The PIO is initialized
+and started using C-SDK low-level functions.
