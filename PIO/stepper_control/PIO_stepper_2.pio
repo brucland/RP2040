@@ -1,0 +1,79 @@
+; Bruce Land -- 7/19/2021
+;
+.program stepper
+; Use 4 outputs to run a stepper motor pins 6 to 9
+; get a pulse duration from cpu 32-bit
+; get a step sequence from cpu (8-steps, 4 bits each)
+; step through the sequence, each for the duration specified
+;    For full-step we get two sequences, for half-step get one
+; The assumption is that this code will step at constant speed
+;    until signalled by the CPU.
+; CPU signals new data on pin 4, but PIO finishes currect sequence
+;    then PIO ACKs on pin 10, read by pin 11 on CPU
+;
+; based on:
+;   https://github.com/tinkertechtrove/pico-pi-playing/blob/main/pio-steppers/test_motor4.py
+
+new_data:
+	; cpu will clear data-signal 
+	;    when it gets the ACK
+	; ACK the request
+	set pins 1		; ACK on pin 10
+	;
+	pull block		; get pulse duration
+	mov isr, osr	; store duration into isr
+	;
+	pull block		; get step sequence
+	mov y, osr		; store sequence in y
+	;
+	set pins 0		; clear the ACK
+	;
+	cpu_wait:
+	jmp pin cpu_wait ; wait for cpu to clear request
+	
+.wrap_target	
+	jmp !osre step	; all steps used? 
+	; only check for new data at end of full sequence
+	jmp pin new_data ; cpu signals new data ready
+    mov osr, y		; if all used, put more in osr
+    ;
+	; now set 4 pins and count duration
+    step:
+    out pins 4  	; get the next 4 bits onto pins
+	mov x, isr		; retreive pulse length
+	count_dur:		; and count the duration
+    jmp x-- count_dur
+.wrap              
+
+% c-sdk {
+// this is a raw helper function for use by the user which sets up the GPIO output, 
+//   and configures the SM to output on a particular pin
+
+void stepper_program_init(PIO pio, uint sm, uint offset, uint pin) {
+   
+   pio_gpio_init(pio, pin);
+   pio_gpio_init(pio, pin+1);
+   pio_gpio_init(pio, pin+2);
+   pio_gpio_init(pio, pin+3);
+   pio_gpio_init(pio, 10); // ACK
+   //
+   pio_sm_set_out_pins (pio, sm, pin, 4) ;
+   pio_sm_set_consecutive_pindirs(pio, sm, pin, 4, true); 
+   pio_sm_set_set_pins (pio, sm, 10, 1) ; // ACK
+   pio_sm_set_consecutive_pindirs(pio, sm, 10, 1, true); // ACK
+   //
+   pio_sm_config c = stepper_program_get_default_config(offset);
+   //
+   // Using 'out' and 'set' 
+   sm_config_set_out_pins(&c, pin, 4);
+   sm_config_set_set_pins(&c, 10, 1); // ACK
+   //
+   // JMP pin is specified separately as GPIO #, GPIO 4
+   sm_config_set_jmp_pin (&c, 4) ;
+   //
+   // the out FIFO, shift right, no autopull, threshold 31
+   sm_config_set_out_shift (&c, true, false, 31) ;
+   
+   pio_sm_init(pio, sm, offset, &c);
+}
+%}
