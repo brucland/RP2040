@@ -15,7 +15,7 @@ The code sructure
 ---
 There are two source files which are compiled using the Arduino 2.0beta IDE and a PIO assembler.
 The C++ source file has a *.ino* extension
-The assembler I have been using is a web version at ** https://wokwi.com/tools/pioasm**. PIOASM takes 
+The assembler I have been using is a web version at  https://wokwi.com/tools/pioasm. PIOASM takes 
 assembler source (of course) and also allows you to write some of the state machine C set up code in the same file. 
 The output of the assembler is a C header file with an array representing the assembled PIO code, 
 a couple of assembler-written C routines, and with the C code you specifed passed through to the header file.
