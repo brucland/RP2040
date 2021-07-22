@@ -6,7 +6,9 @@ in hardware, and I find it useful.
 The PIO can be used to implement a fast timer/counter,
 detect i/o pin edges, and log the time stamps at full bus rate to a 8-slot hardware FIFO. The FIFO
 can then be read by the M0 core at some much slower rate. The implemented capture has a useful dynamic range 
-from 10 MHz events down to a milliHertz.
+from 10 MHz events down to a milliHertz. If the capture rate is slower than the thread execution rate, then
+an indefinite number of captures is possible. If the capture rate is very high, then only the first 8 will be logged to
+the FIFO, then the system will stall until the CPU reads the FIFO.
 
 The code structure
 ------------------
@@ -31,4 +33,8 @@ There are four 32-bit registers: x, y, osr, and isr.  There are nine opcodes. So
 * The *mov* command does what you would expect, but can optionally logically invert or bit-reverse on move.
 * The *set* opcode loads immediate data. In my program it sets i/o pin values directly.     
 * The *in* opcode always operates on the isr register. It shifts out the number of bits you specify iteratively
-into isr register. The code is setup to autopush the isr into the CPU input FIFO.
+into isr register. The code is setup to autopush the isr into the CPU input FIFO to save one instruction.
+
+As configured, the PIO state machine counts at 125 MHz, with an overhead of two cycles per timing event (easy to
+compensate for). If the input is a 10 MHz square wave, there will be 12 or 13 counts recorded in each FIFO entry (barely
+useful). If the input is a 1 KHz square wave there will be 125000 counts per event.
