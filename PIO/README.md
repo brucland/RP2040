@@ -1,5 +1,7 @@
-Using the PIO Introduction: 
---------------------------
+Using the PIO 
+------------
+Introduction: 
+-------------
 The PIO subsystem contains eight completely separate, small i/o state machines for fast, cycle accurate, 
 i/o protocol generation. Examples might be extra SPI channels, VGA driver, DVI driver, pulse density modulation, 
 or stepper motor sequencer. There is a nine-instruction assembly language used to program each PIO state machine. 
@@ -8,7 +10,7 @@ Each state machine has transmit-receive FIFOs which can read/written by the M0 c
 Each state machine can also read/write any of the GPIO pins. YOu can toggle an i/o pin as fast as 62 MHz, but you will not 
 see such a fast signal if you are using a solderless breadboard.  
 
--- PIO processor (there are 8)
+- PIO processor (there are 8)
 From the documentation:
 
  * Each PIO is programmable in the same sense as a processor:
@@ -26,6 +28,7 @@ From the documentation:
  *  * IRQ flag set/clear/status
 
 -- The assembly language:
+------------------------
 See C-SDK manual, section 3.4. Program memory is only 32 insetructions long, but each instruction can have several 
 simultaneous effects, including a variable delay after execution (for pulse length trimming), the ability to
 set/clear a group of pins(side-set), and, of course, the main opcode function. Some instructions can also be set up 
