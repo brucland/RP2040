@@ -31,7 +31,7 @@ The assembly language:
 ------------------------
 See C-SDK manual, section 3.4. The PIO has a total of nine instructions:   
 *JMP, WAIT, IN, OUT, PUSH, PULL, MOV, IRQ, and SET*   (from the RP2040 datasheet)  
-!(https://people.ece.cornell.edu/land/courses/ece4760/RP2040/MBED/PIO/PIO_asm_summary.PNG)
+!(https:\\people.ece.cornell.edu\land\courses\ece4760\RP2040\MBED\PIO\PIO_asm_summary.PNG)
 Program memory is only 32 insetructions long, but each instruction can have several 
 simultaneous effects, including a variable delay after execution (for pulse length trimming), the ability to
 set/clear a group of pins(side-set), and, of course, the main opcode function. Some instructions can also be set up 
