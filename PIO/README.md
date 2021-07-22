@@ -10,7 +10,7 @@ Each state machine has transmit-receive FIFOs which can read/written by the M0 c
 Each state machine can also read/write any of the GPIO pins. YOu can toggle an i/o pin as fast as 62 MHz, but you will not 
 see such a fast signal if you are using a solderless breadboard.  
 
-- PIO processor (there are 8)
+-- PIO processor (there are 8)
 From the documentation:
 
  * Each PIO is programmable in the same sense as a processor:
@@ -27,7 +27,7 @@ From the documentation:
  *  * DMA interface, sustained throughput up to 1 word per clock from system DMA
  *  * IRQ flag set/clear/status
 
--- The assembly language:
+The assembly language:
 ------------------------
 See C-SDK manual, section 3.4. Program memory is only 32 insetructions long, but each instruction can have several 
 simultaneous effects, including a variable delay after execution (for pulse length trimming), the ability to
@@ -35,7 +35,9 @@ set/clear a group of pins(side-set), and, of course, the main opcode function. S
 to auto-pull or auto-push the i/o FIFOs at the same time they perform other functions. An extra SPI channel takes 
 5 instructions, PWM takes 7, VGA takes ~30.
 
--- Merging PIO code with C: PIOASM runs as a separate step in the default C-SDK make-process. 
+ Merging PIO code with C: 
+ ------------------------
+ PIOASM runs as a separate step in the default C-SDK make-process. 
 The C compile details are hidden by the Arduino-MBED interface (good), but aso hides the ability to build PIO code (bad).
 The solution is to use a stand-alone version of PIOASM. The version I have been using is a web version at 
 https://wokwi.com/tools/pioasm. PIOASM takes assembler source (of course) and also allows you to write some of the 
