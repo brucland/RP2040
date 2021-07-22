@@ -29,7 +29,9 @@ From the documentation:
 
 The assembly language:
 ------------------------
-See C-SDK manual, section 3.4. Program memory is only 32 insetructions long, but each instruction can have several 
+See C-SDK manual, section 3.4. The PIO has a total of nine instructions:   
+*JMP, WAIT, IN, OUT, PUSH, PULL, MOV, IRQ, and SET*  
+Program memory is only 32 insetructions long, but each instruction can have several 
 simultaneous effects, including a variable delay after execution (for pulse length trimming), the ability to
 set/clear a group of pins(side-set), and, of course, the main opcode function. Some instructions can also be set up 
 to auto-pull or auto-push the i/o FIFOs at the same time they perform other functions. An extra SPI channel takes 
