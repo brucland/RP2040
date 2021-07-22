@@ -28,10 +28,10 @@ The C program uses both  MBED and
 C-SDK functions. MBED threads are used for multitasking and USB serial support. The PIO is initialized
 and started using C-SDK low-level functions. The PIO itself runs a weird, stripped down assembly language, in which
 each opcode may execute several related functions, but ALWAYS in one cycle (including conditional jumps).
-There are four 32-bit registers: x, y, osr, and isr.
-The *pull* opcode grabs a 32-bit value from the CPU output FIFO and loads it into the *osr* register.
-The *mov* command does what you would expect.
-The *set* opcode loads immediate data. In my program it sets i/o pin values. 
+There are four 32-bit registers: x, y, osr, and isr.  
+The *pull* opcode grabs a 32-bit value from the CPU output FIFO and loads it into the *osr* register.  
+The *mov* command does what you would expect.  
+The *set* opcode loads immediate data. In my program it sets i/o pin values.   
 The *out* opcode always operates on the osr register. It shifts out the number of bits you specify iteratively
 unitl it is empty or you reload osr. Much of the function of the program depends on the context that you set up
 in configuration registers.
