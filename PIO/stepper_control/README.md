@@ -30,8 +30,10 @@ and started using C-SDK low-level functions. The PIO itself runs a weird, stripp
 each opcode may execute several related functions, but ALWAYS in one cycle (including conditional jumps).
 There are four 32-bit registers: x, y, osr, and isr.  
 The *pull* opcode grabs a 32-bit value from the CPU output FIFO and loads it into the *osr* register.  
-The *mov* command does what you would expect.  
-The *set* opcode loads immediate data. In my program it sets i/o pin values.   
+The *mov* command does what you would expect, but can optionally logically invert or bit-reverse on move.
+The *set* opcode loads immediate data. In my program it sets i/o pin values directly.     
 The *out* opcode always operates on the osr register. It shifts out the number of bits you specify iteratively
-unitl it is empty or you reload osr. Much of the function of the program depends on the context that you set up
-in configuration registers.
+unitl it is empty or you reload osr.  
+Much of the function of the program depends on the context that you set up
+in configuration registers. For instance, the *jmp* opcode can be made conditional on a pin value, but only one pin,
+and that is specified in PIO setup  C code.
