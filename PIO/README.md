@@ -1,5 +1,6 @@
-Using the PIO
--- Introduction: The PIO subsystem contains eight completely separate, small i/o state machines for fast, cycle accurate, 
+Using the PIO Introduction: 
+--------------------------
+The PIO subsystem contains eight completely separate, small i/o state machines for fast, cycle accurate, 
 i/o protocol generation. Examples might be extra SPI channels, VGA driver, DVI driver, pulse density modulation, 
 or stepper motor sequencer. There is a nine-instruction assembly language used to program each PIO state machine. 
 The instructions are Turing-complete, but not meant for general computation (e.g. don't use them to add 32-bit integers).
