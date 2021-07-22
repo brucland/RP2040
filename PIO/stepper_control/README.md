@@ -9,7 +9,9 @@ the main cpu. The PIO unit waits for pulse-rate and sequence information from th
 cpu, then produces an indefinite number of pulses at that rate, until signalled by the
 cpu. When signalled, the PIO finishes the curent sequence of either 4 full steps, or 8
 half-steps, signals the cpu that it is ready, waits for new data, then starts the
-new sequence.
+new sequence. The new data consists of two 32-bit words. The first is the length of each stepper pulse
+in machine cycles 125million/sec. The second is the desired sequence. A 32-bit word can contain 8
+full-steps or 8 half steps. 
 
 The code sructure
 ---
