@@ -24,6 +24,7 @@ There are therefore three files:
 1. the C++ source file (.ino),   
 1. the PIO assembler source (.pio)   
 1. the output of the PIO assembler (.h) which is included into the C++ source.  
+
 The C program uses both  MBED and
 C-SDK functions. MBED threads are used for multitasking and USB serial support. The PIO is initialized
 and started using C-SDK low-level functions. The PIO itself runs a weird, stripped down assembly language, in which
