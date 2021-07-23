@@ -1,10 +1,4 @@
 ;
-; Copyright (c) 2020 Raspberry Pi (Trading) Ltd.
-;
-; SPDX-License-Identifier: BSD-3-Clause
-;
-; SET pin 0 should be mapped to your LED GPIO
-
 .program capture
 ; In which we try to use the PIO as a timer
 ; then blast the captured times to the IN FIFO
@@ -20,8 +14,8 @@
 
 .wrap_target
 wait1:
-	jmp pin got1 	; wait for rising edge + delay a cycle
-	jmp x-- wait1	; loop is 2 cycles (two jmps+cycle-to-jmp) add one wait
+	jmp pin got1 	; wait for rising edge 
+	jmp x-- wait1	; loop is 2 cycles 
 got1:
 	in x 32		; send the counter to isr and autopush
 	;
