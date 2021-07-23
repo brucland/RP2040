@@ -1,0 +1,59 @@
+;
+; Copyright (c) 2020 Raspberry Pi (Trading) Ltd.
+;
+; SPDX-License-Identifier: BSD-3-Clause
+;
+; SET pin 0 should be mapped to your LED GPIO
+
+.program capture
+; In which we try to use the PIO as a timer
+; then blast the captured times to the IN FIFO
+
+	; gpio 4 rising edge occurance will be time
+	; stamped and transfered to FIFO
+	; This program just counts while for the edge,
+	; loads an time into a FIFO,
+	; Then counts and waits for a falling edge and loops
+	;
+	set x 0x1f		; init x timer 0x0000001f -- can set only 5 bits
+	mov x ::x		; filp the bits into the high positions 0xf8000000
+
+.wrap_target
+wait1:
+	jmp pin got1 	; wait for rising edge + delay a cycle
+	jmp x-- wait1	; loop is 2 cycles (two jmps+cycle-to-jmp) add one wait
+got1:
+	in x 32		; send the counter to isr and autopush
+	;
+wait0:
+	jmp pin not0
+	jmp wait1       ; got the 0, so wait for 1
+not0:
+	jmp x-- wait0	; loop is 2 cycles
+	;
+.wrap             ; 
+
+% c-sdk {
+// this is a raw helper function for use by the user which sets up the GPIO output, 
+//   and configures the SM to output on a particular pin
+
+void capture_program_init(PIO pio, uint sm, uint offset, uint pin) {
+   // No OUTPUT pins
+   //pio_gpio_init(pio, pin);
+   // the jump pin
+   pio_gpio_init(pio, 4); 
+   //pio_sm_set_consecutive_pindirs(pio, sm, pin, 1, true); //no output
+   pio_sm_config c = capture_program_get_default_config(offset);
+   // Using 'out' NOT 'set' in modified program
+   //sm_config_set_out_pins(&c, pin, 1);
+   // no output
+   //sm_config_set_set_pins(&c, pin, 1);
+   // JMP pin is specified separately as GPIO #, GPIO 4
+   sm_config_set_jmp_pin (&c, 4) ;
+   // no output FIFO from core0, all input to core0
+   sm_config_set_fifo_join (&c, PIO_FIFO_JOIN_RX) ;
+   // autopush the isr to eliminate one istrcution
+   sm_config_set_in_shift (&c, true, true, 1) ; 
+   pio_sm_init(pio, sm, offset, &c);
+}
+%}
