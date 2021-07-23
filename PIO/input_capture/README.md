@@ -35,6 +35,6 @@ There are four 32-bit registers: x, y, osr, and isr.  There are nine opcodes. So
 * The *in* opcode always operates on the isr register. It shifts in the number of bits you specify iteratively
 into isr register. The C code sets the PIO configuration to autopush the isr into the CPU input FIFO to save one instruction.
 
-As configured, the PIO state machine counts at 125 MHz, with an overhead of two cycles per timing event (easy to
-compensate for). If the input is a 10 MHz square wave, there will be 12 or 13 counts recorded in each FIFO entry (barely
-useful). If the input is a 1 KHz square wave there will be 125000 counts per event.
+As configured, the PIO state machine counts at 62.5 MHz, with an overhead of two cycles per timing event (easy to
+compensate for). If the input is a 10 MHz square wave, there will be 6 or 7 counts recorded in each FIFO entry (barely
+useful). If the input is a 1 KHz square wave there will be 62500 counts per event.
