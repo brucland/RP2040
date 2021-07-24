@@ -2,14 +2,15 @@ With a new system, I generally test DMA by rivially moving an array, then see ho
 
 The DMA channels are triggered by a high resolution timer built into the DMA subsystem. Setting the timer divider for a given output sine wave frequency is a bit obscure.
 TREQ source DREQ_TIMER0 = 0x3b is used to trigger DMA channel zero. The timer refered to is DMA timer 0, which has settable frequency as X/Y<1 where X is the top 16 bits of a register, and Y is the bottom 16 bits. It is easy to show that the settability of the frequency is very good at audio frequencies, with a useful range of 7 Hz to 15 KHz.  The algorithm for going from a desired output frequency, Fout, to the values of X and Y is slightly involved. For a sine table of length L, and cpu clock frequency of Fclk:  
+
 Fout = (Fclk/L)*(X/Y)  
 The two settable variables are X and Y, but they are not independent, and must be integers. The solution I used is to set Y to maximum value (0xFFFF), then solve for the integer X0, which will systemmatically cause Fout to be a little low. The next step is to lower Y slightly to set the closest possible frequency. To do that we are going to Taylor expand:  
-1/(0xFFFF - ΔY) as (2-16)/(1 -(2-16* ΔY)) yielding (2-16)*(1 +(2-16 * ΔY))  
+1/(0xFFFF - ΔY) as (2^-16)/(1 -(2^-16* ΔY)) yielding (2^-16)*(1 +(2^-16 * ΔY))  
 As long as ΔY<211 the approximation is good to 0.1%.  
 Now the output frequency can be written as  
-Fout = (Fclk/L)*X* (2-16)*(1 +(2-16 * ΔY))  
+Fout = (Fclk/L)*X* (2^-16)*(1 +(2^-16 * ΔY))  
 The steps are: solve for X to give lower bound frequency, then compute a small correction.  
-X0 = Fout/Fclk * L * 216  
-ΔY =( Fout - Fout(int(X0)))/Fclk * L * 232/int(X0)  
+X0 = Fout/Fclk * L * 2^16  
+ΔY =( Fout - Fout(int(X0)))/Fclk * L * 2^32/int(X0)  
 
 Core0 is running MBED threads, one of which handles USB serial input/output using the usual C scanf and printf functions.The serial thread blocks on user input, and it blocks on the FIFO connected to core1. The FIFO sends the user input frequency to core1 where it is converted to DMA timer settings. Core1 cannot run any MBED objects. It has to use only native C-SDK functions to set up the PWM and DMA channels and to listen to the FIFO input from core0. 
