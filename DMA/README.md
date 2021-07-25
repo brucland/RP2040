@@ -17,6 +17,6 @@ Core0 is running MBED threads, one of which handles USB serial input/output usin
 
 The DDS sine wave output is feed back to an ADC channel attached to a DMA channel transfering the samples to a PWM slice at ADC rate. The ADC rate is settable up to 0.5 Msamples/sec to as low as 735 samples/sec in auto-sample mode (adc_run(1);). The following image shows the synthesized 1 KHz waveform on the top trace with a synthesis rate of 0.5 Msamples/sec.The bottom trace is the voltage from the low-passed PWM feed back from ADC channel zero, which is sampled at 10 Ksamples/sec. The DDS synthesis is set up on core1 and the ADC playback is setup on core0. Once set up, all of the real work is done in hardware external to the two cores. Core0 is just waiting for user input of frequency and ADC sample rate, while core1 is blocking waiting for a valid frequency value in the FIFO.
 The ADC setup turns on autosample, sets channel 0, and configures the ADC FiFO to autoload new conversion values into the FIFO. A DMA channel is configured to watch the FIFO load, then transfer the new value to a PWM duty cycle register. Once set up, the hardware grabs samples and outputs to the PWM with no cpu involvment.  
- See PWM_to_ADC.jpg
+ The phase shift of the ADC sampled waveform is due to the low ADC sampleing rate I chose, and to the low-pass reconstruction filter.
  ![waveform](PWM_to_ADC.jpg)
  
