@@ -19,4 +19,4 @@ The DDS sine wave output is feed back to an ADC channel attached to a DMA channe
 The ADC setup turns on autosample, sets channel 0, and configures the ADC FiFO to autoload new conversion values into the FIFO. A DMA channel is configured to watch the FIFO load, then transfer the new value to a PWM duty cycle register. Once set up, the hardware grabs samples and outputs to the PWM with no cpu involvment.  
  See PWM_to_ADC.jpg
  ![waveform](https://github.com/brucland/RP2040/DMA/PWM_to_ADC.jpg?raw=true)
- (https://github.com/[username]/[reponame]/blob/[branch]/image.jpg?raw=true)
+ 
