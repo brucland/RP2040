@@ -41,4 +41,5 @@ are necessary to initialize register x to a large value.
 
 As configured, the PIO state machine counts at 62.5 MHz, with an overhead of two cycles per timing event (easy to
 compensate for). If the input is a 10 MHz square wave, there will be 6 or 7 counts recorded in each FIFO entry (barely
-useful). If the input is a 1 KHz square wave there will be 62500 counts per event.
+useful). If the input is a 1 KHz square wave there will be 62500 counts per event. The counter/timer will underflow after about
+33 seconds, so the lower frequency limit is 0.03 Hz, unless you divide the PIO clock.
