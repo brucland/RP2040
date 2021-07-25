@@ -34,10 +34,10 @@ There are four 32-bit registers: x, y, osr, and isr.  There are nine opcodes. So
 * The *set* opcode loads immediate data. In my program it sets i/o pin values directly.     
 * The *in* opcode always operates on the isr register. It shifts in the number of bits you specify iteratively
 into isr register. The C code sets the PIO configuration to autopush the isr into the CPU input FIFO to save one instruction.
-* Since the ISA can only decriment a counter, and because the *set* command only takes 5-bit immediae values, two instructions
+* Since the ISA can only decriment a counter, and because the *set* command only takes 5-bit immediate values, two instructions
 are necessary to initialize register x to a large value.    
-set x 0x1f		; init x timer 0x0000001f -- can set only 5 bits  
-mov x ::x		; use the mov instruction to filp the bits into the high positions 0xf8000000  
+`set x 0x1f	`	; init x timer 0x0000001f -- can set only 5 bits  
+`mov x ::x	`	; use the mov instruction to filp the bits into the high positions 0xf8000000  
 
 As configured, the PIO state machine counts at 62.5 MHz, with an overhead of two cycles per timing event (easy to
 compensate for). If the input is a 10 MHz square wave, there will be 6 or 7 counts recorded in each FIFO entry (barely
