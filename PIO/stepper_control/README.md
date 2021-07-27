@@ -42,3 +42,5 @@ unitl it is empty or you reload osr.
 Much of the function of the program depends on the context that you set up
 in configuration registers. For instance, the *jmp* opcode can be made conditional on a pin value, but only one pin,
 and that is specified in PIO setup  C code.
+
+A video of the PIO running a 2BYJ48 stepper is at https://youtu.be/TKRRkvhqN08
