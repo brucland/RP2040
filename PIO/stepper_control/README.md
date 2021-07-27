@@ -12,7 +12,7 @@ half-steps, signals the cpu that it is ready, waits for new data, then starts th
 new sequence. The new data consists of two 32-bit words. The first is the length of each stepper pulse
 in machine cycles 125million/sec. The second is the desired sequence. A 32-bit word can contain 8
 full-steps or 8 half steps.   
-A video of the PIO running a 2BYJ48 stepper is at https://youtu.be/TKRRkvhqN08
+A video of the PIO running a 24BYJ48 stepper is at https://youtu.be/TKRRkvhqN08
 
 The code sructure
 ---
