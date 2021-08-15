@@ -1,0 +1,200 @@
+; Bruce Land -- 7/28/2021
+;
+; ======================================================
+.program stepper
+; ======================================================
+; Use 4 outputs to run a stepper motor pins 6 to 9
+; get a pulse duration from cpu 32-bit
+; get a step sequence from cpu (8-steps, 4 bits each)
+; step through the sequence, each for the duration specified
+;    For full-step we get two sequences, for half-step get one
+; The assumption is that this code will step at constant speed
+;    until signalled by the CPU.
+; Counter machine signals new data on pin 4, but PIO finishes currect sequence
+;    then PIO ACKs on IRQ 0, read on CPU
+;
+; based on:
+;   https://github.com/tinkertechtrove/pico-pi-playing/blob/main/pio-steppers/test_motor4.py
+
+new_data:
+	; cpu will clear data-signal 
+	;    when it gets the ACK
+	; ACK the request
+	irq nowait 0 rel	; set ACK irq register (not an actual interrupt!)
+	;
+	; autopull ON
+	out isr 32
+	;
+	; autopull ON
+	out y 32
+	;
+	;irq clear 0		; ACK is cleared in the C pgm
+	;
+.wrap_target	
+	jmp !osre step	; all steps used? 
+	; steps in buffer used up:
+	; only check for new data at end of full sequence
+	jmp pin new_data ; counter sm signals when reached number of steps
+	; if no new data, reuse old
+    mov osr, y		; if all used, put more in osr
+    ;
+	; now set 4 pins and count duration
+step:
+    out pins 4  	; get the next 4 bits onto pins
+	mov x, isr		; retreive pulse length
+count_dur:		; and count the duration
+    jmp x-- count_dur
+.wrap     
+
+; ======================================================
+; step counter program
+; ======================================================
+.program step_counter
+.side_set 1 opt
+.wrap_target
+signal:
+	; get the number of desired steps
+	; with autopull ON and set the handshake
+	out x 32 side 1
+	
+	; if input count is zero (motor stopped) jump to signal
+	; but always clear the signal bit
+	jmp !x signal side 0 
+	
+	; count rising edges on gpio 9
+	counting:
+	; pin gpio 9 is driven by other sm
+	; as one phase of the motor drive
+	wait 0 gpio 9 
+	wait 1 gpio 9
+	jmp x-- counting
+	; got to desired count so:
+	; signal the stepper state machine to stop on gpio 5
+	; (at beginning of program )
+.wrap
+   
+; ======================================================
+; step counter1 program 
+; ======================================================
+.program step_counter1
+.side_set 1 opt
+.wrap_target
+signal:
+	; get the number of desired steps
+	; with autopull ON and set the handshake
+	out x 32 side 1
+	
+	; if input count is zero (motor stopped) jump to signal
+	; but always clear the signal bit
+	jmp !x signal side 0 
+	
+	; count rising edges on gpio 9
+	counting:
+	; pin gpio 10 is driven by other sm
+	; as one phase of the motor drive
+	wait 0 gpio 13 
+	wait 1 gpio 13
+	jmp x-- counting
+	; got to desired count so:
+	; signal the stepper state machine to stop on gpio 5
+	; (at beginning of program )
+.wrap
+
+
+% c-sdk {
+// ======================================================
+// === stepper driver 0 config ===
+// ======================================================
+void stepper0_program_init(PIO pio, uint sm, uint offset, uint pin) {
+   
+   pio_gpio_init(pio, pin);
+   pio_gpio_init(pio, pin+1);
+   pio_gpio_init(pio, pin+2);
+   pio_gpio_init(pio, pin+3);
+   //
+   // the step outputs
+   pio_sm_set_out_pins (pio, sm, pin, 4) ;
+   pio_sm_set_consecutive_pindirs(pio, sm, pin, 4, true); 
+   //
+   pio_sm_config c = stepper_program_get_default_config(offset);
+   //
+   // Using 'out' 
+   sm_config_set_out_pins(&c, pin, 4);
+   //
+   //JMP pin is specified separately as GPIO #, GPIO 5
+   // driven by signal from other sm
+   sm_config_set_jmp_pin (&c, 5) ;
+   //
+   // the out FIFO, shift right,  autopull, threshold 31
+   sm_config_set_out_shift (&c, true, true, 31) ;
+   //
+   pio_sm_init(pio, sm, offset, &c);
+}
+
+// ======================================================
+// === stepper driver 1 config ===
+// ======================================================
+void stepper1_program_init(PIO pio, uint sm, uint offset, uint pin) {
+   pio_gpio_init(pio, pin);
+   pio_gpio_init(pio, pin+1);
+   pio_gpio_init(pio, pin+2);
+   pio_gpio_init(pio, pin+3);
+   //
+   // the step outputs
+   pio_sm_set_out_pins (pio, sm, pin, 4) ;
+   pio_sm_set_consecutive_pindirs(pio, sm, pin, 4, true); 
+   //
+   pio_sm_config c = stepper_program_get_default_config(offset);
+   //
+   // Using 'out' 
+   sm_config_set_out_pins(&c, pin, 4);
+   //
+   //JMP pin is specified separately as GPIO #, GPIO 14
+   // driven by signal from other sm
+   sm_config_set_jmp_pin (&c, 14) ;
+   //
+   // the out FIFO, shift right,  autopull, threshold 31
+   sm_config_set_out_shift (&c, true, true, 31) ;
+   //
+   pio_sm_init(pio, sm, offset, &c);
+}
+
+// ======================================================
+// === stepper counter 0 config ===
+// ======================================================
+void step_counter0_program_init(PIO pio, uint sm, uint offset, uint pin) {
+   
+   pio_gpio_init(pio, 5); // signal pin 
+   pio_sm_set_consecutive_pindirs(pio, sm, 5, 1, true); // signal done output 
+   //
+   pio_sm_config c = step_counter_program_get_default_config(offset);
+   //
+   // one pin, optional side, not pindir
+   sm_config_set_sideset (&c, 2, true, false);
+   sm_config_set_sideset_pins(&c, 5); // signal stepper machine
+   //bool shift_right, bool autopull, uint pull_threshold)
+   sm_config_set_out_shift (&c, true, true, 31) ;
+   //
+   pio_sm_init(pio, sm, offset, &c);
+}
+
+// ======================================================
+// === stepper counter 1 config ===
+// ======================================================
+void step_counter1_program_init(PIO pio, uint sm, uint offset, uint pin) {
+   pio_gpio_init(pio, 14); // signal pin 
+   pio_sm_set_consecutive_pindirs(pio, sm, 14, 1, true); // signal done output 
+   //
+   pio_sm_config c = step_counter1_program_get_default_config(offset);
+   //
+   // one pin, optional side, not pindir
+   sm_config_set_sideset (&c, 2, true, false);
+   sm_config_set_sideset_pins(&c, 14); // signal stepper machine
+   //bool shift_right, bool autopull, uint pull_threshold)
+   sm_config_set_out_shift (&c, true, true, 31) ;
+   //
+   pio_sm_init(pio, sm, offset, &c);
+}
+// ======================================================
+//
+%}
