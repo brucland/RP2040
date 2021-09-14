@@ -1,0 +1,185 @@
+; Bruce Land -- Aug 2021
+;
+/*
+*  NTSC sync and data
+ * using fake progreassive scan
+ * See https://sagargv.blogspot.com/2014/07/ntsc-demystified-color-demo-with.html
+ *
+ * 263 scan lines.
+ * one line is exactly 63.555 microseconds long
+ * H-sync pulse is zero volts for 4.7 uSec, but not too critical
+ * V-sync pulse is zero volts for 29.4 uSec, but not too critical
+ * if line 1 is V-synch then content can start on line 21 or so and continue
+ *   until line 260 
+ * LInes 1-20 and 261-263 should hold video data at zero
+ * about 55 uSec of each active scan line can contain pixels
+ * a 5 Mpixel/sec rate gives about 55*5 = 275 pixels/line, so use 256 pixels
+ *
+ * PIO implementation:
+ * One line time should require waits of <32 cycles so that loops are not required.
+ * Choose sync machine clock rate so that 27 cycles give 63.555 uSec, which is
+ * 15,734 Hz. So machine clock should be 27*15734=424828 Hz
+ * Ths colck choice means that an H-sync pulse is exactly two cycles and 
+ * V-sync is approx 13 cycles.
+ * The clock divider is therfore 125e6/424828 = 294.2367
+ */
+ 
+.program ntsc_sync
+;  https://github.com/tinkertechtrove/pico-pi-playing/blob/main/pio-steppers/test_motor4.py
+;
+	; get active line count 200
+	; and store for future use
+	; 3 sync + 30 blank + 200 active + 30 blank
+	pull block
+	out isr 32
+.wrap_target
+	; start new frame with V-sync pulse for 3 line times of inverted sync
+	; low 2 then high for 25 clocks (to total 27 cycles)
+	; 27 cycles is the length of EVERY line
+	; v sync line 1
+	set pins 0 [24] //
+	set pins 1 [1] // 
+	; v sync line 2
+	set pins 0 [24] //
+	set pins 1 [1] // 
+	; v sync line 3
+	set pins 0 [22] //
+	; 
+	set x 21	; preload for 22 lines blank_loop
+	mov y isr	; preload for data_loop
+	set pins 1 [1] // 
+	;
+	; write 22 blank lines	(adjust this for vertical centering)
+blank_loop:
+	; two cycles of zero the 25 cycles of one
+	; but do two lines/loop to shift downward
+	;set pins 0 [1]
+	;set pins 1 [24]
+	;
+	set pins 0 [1]
+	; rest of line is high
+	; 23 wait + 1 set + 1 jmp + 2 cycles previous
+	set pins 1 [23]
+	jmp x-- blank_loop
+	;
+	; write 200 lines an trigger ntsc_data machine
+	; use 
+data_loop:
+	; set sync low for 2 cycles
+	set pins 0 [1]
+	; set sync high for 4 cycles ('back porch')
+	set pins 1 [3]
+	
+	; genearate signal for data machine
+	irq nowait 0
+	; wait until end of line 2 set + 4 set + irq + jmp + 19
+	nop [18]
+	; =====================
+	; for testing display a white vertical bar
+	; by raising the data pin for 1 cycle, then lowering it
+	; and waiting to draw another line
+	;set pins 0b11
+	;set pins 0b01  ; 2 cycles
+	;
+	;set pins 0b01 [17]
+	;
+	; another vertical bar 2.35 uSec wide
+	;set pins 0b11
+	;set pins 0b01  ; 2 cycles
+	;
+	; ======================
+	; 
+	jmp y-- data_loop
+	
+	;
+	; write blank lines (>=3) to make up 263 total lines
+	; v_sync line + 32 blanks + 200 data lines = 241 lines so far
+	;
+	set x 29
+end_blank_loop:
+	; two cycles of zero
+	set pins 0 [1]
+	; rest of line is high
+	; 23 wait + 1 set + 1 jmp + 2 previous
+	set pins 1 [23] //15
+	jmp x-- end_blank_loop	
+.wrap              
+
+% c-sdk {
+// this is a raw helper function for use by the user which sets up the GPIO output, 
+//   and configures the SM to output on a particular pin
+
+void ntsc_sync_program_init(PIO pio, uint sm, uint offset, uint pin) {
+   
+   pio_gpio_init(pio, pin);
+   pio_gpio_init(pio, pin+1);
+   //
+   pio_sm_set_out_pins (pio, sm, pin, 2) ;
+   pio_sm_set_consecutive_pindirs(pio, sm, pin, 2, true); 
+   //
+   pio_sm_config c = ntsc_sync_program_get_default_config(offset);
+   //
+   // Using 'out' and 'set' 
+   sm_config_set_set_pins(&c, pin, 2);
+   //
+   // JMP pin is specified separately as GPIO #, GPIO 4
+   // sm_config_set_jmp_pin (&c, 4) ;
+   //
+   // the out FIFO, shift right, no autopull, threshold 31
+   // sm_config_set_out_shift (&c, true, false, 31) ;
+   
+   pio_sm_init(pio, sm, offset, &c);
+}
+%}
+
+.program ntsc_data
+;  https://github.com/tinkertechtrove/pico-pi-playing/blob/main/pio-steppers/test_motor4.py
+;	
+.wrap_target
+	; wait for signal to start video line from sync machine
+	wait 1 irq 0
+	; number of data words in a line-1
+	set x 7 ; 7
+	; 
+	; get 32 bits
+next_word:
+	pull block
+more_bits:
+	; slow down the output to about 5 MHz
+	out pins 1 [20]
+	jmp!OSRE more_bits
+	jmp x-- next_word
+	; zero the data line
+	set pins 0
+.wrap
+
+% c-sdk {
+// this is a raw helper function for use by the user which sets up the GPIO output, 
+//   and configures the SM to output on a particular pin
+
+void ntsc_data_program_init(PIO pio, uint sm, uint offset, uint pin) {
+   
+   //pio_gpio_init(pio, pin);
+   pio_gpio_init(pio, pin+1);
+   //
+   pio_sm_set_out_pins (pio, sm, pin+1, 1) ;
+   pio_sm_set_set_pins (pio, sm, pin+1, 1) ;
+   pio_sm_set_consecutive_pindirs(pio, sm, pin+1, 1, true); 
+   //
+   pio_sm_config c = ntsc_data_program_get_default_config(offset);
+   //
+   // Using 'out' and 'set' 
+   sm_config_set_out_pins(&c, pin+1, 1);
+   sm_config_set_set_pins(&c, pin+1, 1);
+   //
+   // JMP pin is specified separately as GPIO #, GPIO 4
+   // sm_config_set_jmp_pin (&c, 4) ;
+   //
+   // the out FIFO, shift right, no autopull, threshold 31
+    sm_config_set_out_shift (&c, false, false, 32) ;
+	// and join to make 8 entries
+	sm_config_set_fifo_join (&c, PIO_FIFO_JOIN_TX) ;
+   
+   pio_sm_init(pio, sm, offset, &c);
+}
+%}
