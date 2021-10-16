@@ -4,4 +4,4 @@ You might think that NTSC video (analog broadcast video standard in USA) is comp
 
 The video system fit into two PIO state machines, with different clock rates. The slower machine generates the sync pulses, which have a minimum feature time of aound 5 uec. The faster machine generates the 4-bit video, with a bit time of around 0.2 uSec. The rate gives a pixel density of 256 points across the scan-line active time of 51 uSec. The rest of the 63.55 uSec scan line is used for sync and image centering.The sync and video are then combined using a four bit DAC (schematic.png) to convert to a single voltage. Sync is defined as 0 volts, with black pixels at 0.3 volts, and white pixels at 1.3 volts. The start of each scan line is signaled by a sync pulse of just under 5 uSec. The start of a new frame is signalled by a sync pulse of about 180 uSec. One scan line is shown on the scope.jpg image. A test image is below.
 
-![TV](TV_test_image.jpg)
+![TV](image_4bit_improved.jpg)
